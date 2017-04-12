@@ -1,0 +1,20 @@
+apply plugin: 'java'
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin:'application'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile 'org.slf4j:slf4j-api:1.7.21'
+    testCompile 'junit:junit:4.12'
+}
+
+task runApp(type:JavaExec) {
+    def defaultMain = "mango.Tron"
+    classpath = sourceSets.main.runtimeClasspath
+    main = project.hasProperty("mainClass") ? project.getProperty("mainClass") : defaultMain
+}
