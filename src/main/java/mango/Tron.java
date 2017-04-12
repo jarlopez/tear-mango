@@ -1,10 +1,13 @@
 package mango;
 
+import mango.game.State;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
 import java.nio.IntBuffer;
@@ -16,22 +19,29 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Tron {
-    private static PrintStream errStream = System.err;
-    private long window;
+    private final Logger log = LoggerFactory.getLogger(Tron.class);
+
+    private static State state = State.GAME;
+
+    private final String WINDOW_TITLE = "Tear Mango - A Tron Game";
+    private final int WIDTH = 800;
+    private final int HEIGHT = 600;
+    private PrintStream errStream = System.err;
+    private long windowHandle;
 
     public static void main(String[] args) {
         new Tron().run();
     }
 
     public void run() {
-        System.out.println("Hello LWJGL " + Version.getVersion() + "!");
+        log.debug("LWJGL " + Version.getVersion() + "!");
 
         init();
         loop();
 
-        // Free the window callbacks and destroy the window
-        glfwFreeCallbacks(window);
-        glfwDestroyWindow(window);
+        // Free the windowHandle callbacks and destroy the windowHandle
+        glfwFreeCallbacks(windowHandle);
+        glfwDestroyWindow(windowHandle);
 
         // Terminate GLFW and free the error callback
         glfwTerminate();
@@ -44,21 +54,23 @@ public class Tron {
         GLFWErrorCallback.createPrint(errStream).set();
 
         // Initialize GLFW. Most GLFW functions will not work before doing this.
-        if (!glfwInit())
+        if (!glfwInit()) {
             throw new IllegalStateException("Unable to initialize GLFW");
+        }
 
         // Configure GLFW
-        glfwDefaultWindowHints(); // optional, the current window hints are already the default
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
+        glfwDefaultWindowHints(); // optional, the current windowHandle hints are already the default
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the windowHandle will stay hidden after creation
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // the windowHandle will be resizable
 
-        // Create the window
-        window = glfwCreateWindow(300, 300, "Hello World!", NULL, NULL);
-        if (window == NULL)
-            throw new RuntimeException("Failed to create the GLFW window");
+        // Create the windowHandle
+        windowHandle = glfwCreateWindow(WIDTH, HEIGHT, WINDOW_TITLE, NULL, NULL);
+        if (windowHandle == NULL) {
+            throw new RuntimeException("Failed to create the GLFW windowHandle");
+        }
 
         // Setup a key callback. It will be called every time a key is pressed, repeated or released.
-        glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
+        glfwSetKeyCallback(windowHandle, (window, key, scancode, action, mods) -> {
             if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
                 glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
         });
@@ -68,27 +80,27 @@ public class Tron {
             IntBuffer pWidth = stack.mallocInt(1); // int*
             IntBuffer pHeight = stack.mallocInt(1); // int*
 
-            // Get the window size passed to glfwCreateWindow
-            glfwGetWindowSize(window, pWidth, pHeight);
+            // Get the windowHandle size passed to glfwCreateWindow
+            glfwGetWindowSize(windowHandle, pWidth, pHeight);
 
             // Get the resolution of the primary monitor
             GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
-            // Center the window
+            // Center the windowHandle
             glfwSetWindowPos(
-                    window,
+                    windowHandle,
                     (vidmode.width() - pWidth.get(0)) / 2,
                     (vidmode.height() - pHeight.get(0)) / 2
             );
         } // the stack frame is popped automatically
 
         // Make the OpenGL context current
-        glfwMakeContextCurrent(window);
+        glfwMakeContextCurrent(windowHandle);
         // Enable v-sync
         glfwSwapInterval(1);
 
-        // Make the window visible
-        glfwShowWindow(window);
+        // Make the windowHandle visible
+        glfwShowWindow(windowHandle);
     }
 
     private void loop() {
@@ -100,16 +112,32 @@ public class Tron {
         GL.createCapabilities();
 
         // Set the clear color
-        glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
+//        glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
 
         // Run the rendering loop until the user has attempted to close
-        // the window or has pressed the ESCAPE key.
-        while (!glfwWindowShouldClose(window)) {
+        // the windowHandle or has pressed the ESCAPE key.
+        while (!glfwWindowShouldClose(windowHandle)) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
-            glfwSwapBuffers(window); // swap the color buffers
+            switch (state) {
+                case INTRO:
+                    glColor3f(1.0f, 0.0f, 0.0f);
+                    glRectf(0, 0, 640, 480);
+                    break;
+                case GAME:
+                    glColor3f(0.0f, 1.0f, 0.0f);
+                    glRectf(0, 0, 640, 480);
+                    break;
+                case MAIN_MENU:
+                    glColor3f(0.0f, 0.0f, 1.0f);
+                    glRectf(0, 0, 640, 480);
+                    break;
+            }
 
-            // Poll for window events. The key callback above will only be
+            glfwSwapBuffers(windowHandle); // swap the color buffers
+
+
+            // Poll for windowHandle events. The key callback above will only be
             // invoked during this call.
             glfwPollEvents();
         }
