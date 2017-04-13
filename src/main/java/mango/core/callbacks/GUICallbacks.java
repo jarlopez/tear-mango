@@ -2,6 +2,7 @@ package mango.core.callbacks;
 
 import mango.core.drupe.DrupeSystem;
 import mango.game.GUI;
+import mango.game.StateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,14 +29,20 @@ public class GUICallbacks implements CallbackBase {
         log.debug("display");
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//        glColor3f(1.0f, 0.0f, 0.0f);
+//        glRectf(0, 0, 640, 480);
 
         gui.drawMenu();
+        drupe.swapBuffers();
 
+        // XXX TODO Remove below!
+        drupe.setReturnCode(StateEvent.NotImplemented);
     }
 
     @Override
     public void idle() {
         log.debug("idle");
+        drupe.pushRedisplay();
     }
 
     @Override

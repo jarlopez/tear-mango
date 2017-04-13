@@ -10,12 +10,10 @@ public class GraphicsUtil {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_TEXTURE_2D);
-
         glPushMatrix();
 
         glTranslatef(x, y, 0);
         glScalef(size, size, size);
-
         renderText(ftx, text);
 
         glPopMatrix();
@@ -26,6 +24,6 @@ public class GraphicsUtil {
     public static void renderText(DrupeFont ftx, String text) {
         // TODO Implement me!
         glColor3f(1.0f, 0.0f, 0.0f);
-        glRectf(20, 0, 440, 480);
+        glRectf(0, 0, 640, 480);
     }
 }

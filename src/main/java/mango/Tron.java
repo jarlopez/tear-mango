@@ -20,7 +20,6 @@ import java.util.Map;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
@@ -126,7 +125,6 @@ public class Tron {
         });
 
         // Get the thread stack and push a new frame
-        // TODO Why is this needed?
         try (MemoryStack stack = stackPush()) {
             IntBuffer pWidth = stack.mallocInt(1); // int*
             IntBuffer pHeight = stack.mallocInt(1); // int*
@@ -178,28 +176,10 @@ public class Tron {
                 if (status == StateEvent.Quit) {
                     log.info("Clean exit.");
                 } else {
-//                    log.warn("Unhandled state event: " + status.toString());
+                    log.warn("Unhandled state event: " + status.toString());
                 }
+                break;
             }
-
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
-            switch (state) {
-                case INTRO:
-                    glColor3f(1.0f, 0.0f, 0.0f);
-                    glRectf(0, 0, 640, 480);
-                    break;
-                case GAME:
-                    glColor3f(0.0f, 1.0f, 0.0f);
-                    glRectf(0, 0, 640, 480);
-                    break;
-                case MAIN_MENU:
-                    glColor3f(0.0f, 0.0f, 1.0f);
-                    glRectf(0, 0, 640, 480);
-                    break;
-            }
-
-            // Poll for windowHandle events. The key callback above will only be
-            // invoked during this call.
             glfwPollEvents();
         }
     }

@@ -10,7 +10,7 @@ import static org.lwjgl.glfw.GLFW.*;
 public class DrupeSystem {
     private static final Logger log = LoggerFactory.getLogger(DrupeSystem.class.getName());
 
-    private StateEvent returnCode = StateEvent.NotImplemented; // TODO
+    private StateEvent returnCode = StateEvent.None; // TODO
     private CallbackBase currentCallbacks;
 
     public static final int DRUPE_KEY_NONE      = 0;
@@ -21,6 +21,8 @@ public class DrupeSystem {
     private int[] keymap = new int[DRUPE_NUM_SCANCODES];
 
     private long windowHandle;
+    private boolean idle = false;
+    private boolean redisplay = true;
 
     public void updateCallbacks(CallbackBase cb) {
         if (currentCallbacks != null) {
@@ -45,9 +47,23 @@ public class DrupeSystem {
     }
 
     public StateEvent mainLoop(String current) {
+        boolean validCallbacks = currentCallbacks != null;
+
         while (returnCode == StateEvent.None) {
-            // TODO
+            if (validCallbacks && redisplay) {
+                currentCallbacks.display();
+                redisplay = false;
+            }
+            if (validCallbacks && idle) {
+                currentCallbacks.idle();
+            }
         }
+
+        if (validCallbacks) {
+            currentCallbacks.exit();
+        }
+
+        currentCallbacks = null;
         return returnCode;
     }
 
@@ -56,7 +72,7 @@ public class DrupeSystem {
 
         if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
             log.debug("ESC detected. Alerting GLFW.");
-            glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
+            glfwSetWindowShouldClose(window, true);
         }
 
         // Don't care about GLFW_REPEAT
@@ -76,5 +92,13 @@ public class DrupeSystem {
             log.debug("Updating key " + scanCode + " to state " + keyState);
             keymap[scanCode] = keyState;
         }
+    }
+
+    public void pushRedisplay() {
+        this.redisplay = true;
+    }
+
+    public void swapBuffers() {
+        glfwSwapBuffers(windowHandle);
     }
 }
