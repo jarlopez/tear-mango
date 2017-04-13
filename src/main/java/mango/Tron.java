@@ -1,10 +1,10 @@
 package mango;
 
+import mango.core.callbacks.*;
 import mango.core.drupe.DrupeSystem;
 import mango.game.State;
 import mango.game.StateEvent;
 import mango.game.StateFunction;
-import mango.input.KeyHandler;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -27,13 +27,21 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 public class Tron {
 
 
-    private DrupeSystem drupe;
+    private static DrupeSystem drupe = new DrupeSystem();
+    private static Map<String, CallbackBase> callbacks = new HashMap<>();
 
     private static boolean initialized = false;
     private static State state = State.GAME;
     private static Map<StateEvent, StateFunction> fsm = new HashMap<>();
 
     static {
+
+        // TODO Move all these string constants into final ones
+        callbacks.put("gui", new GUICallbacks(drupe));
+        callbacks.put("game", new GameCallbacks(drupe));
+        callbacks.put("pause", new PauseCallbacks(drupe));
+        callbacks.put("configure", new ConfigureCallbacks(drupe));
+
         fsm.put(StateEvent.GameEnd, () -> "pause");
         fsm.put(StateEvent.GamePause, () -> "pause");
         fsm.put(StateEvent.GameUnpause, () -> "game");
@@ -84,6 +92,7 @@ public class Tron {
 
     private void init() {
         log.info("Initializing game");
+        drupe.updateCallbacks(callbacks.get("gui"));
 
         // Setup an error callback. The default implementation
         // will print the error message in System.err.
@@ -108,8 +117,13 @@ public class Tron {
             throw new RuntimeException("Failed to create the GLFW windowHandle");
         }
 
+        // TODO Let Drupe create window
+        drupe.setWindowHandle(windowHandle);
+
         // Setup a key callback. It will be called every time a key is pressed, repeated or released.
-        glfwSetKeyCallback(windowHandle, new KeyHandler());
+        glfwSetKeyCallback(windowHandle, (long window, int key, int scancode, int action, int mods) -> {
+            drupe.handleKey(window, key, scancode, action, mods);
+        });
 
         // Get the thread stack and push a new frame
         // TODO Why is this needed?
@@ -139,7 +153,6 @@ public class Tron {
         // Make the windowHandle visible
         glfwShowWindow(windowHandle);
 
-        drupe = new DrupeSystem();
     }
 
     private void loop() {
@@ -160,11 +173,12 @@ public class Tron {
             StateEvent status = drupe.mainLoop(current);
             if (fsm.containsKey(status) && status != StateEvent.Quit) {
                 current = fsm.get(status).next();
+                log.debug("Current state is " + current);
             } else {
                 if (status == StateEvent.Quit) {
                     log.info("Clean exit.");
                 } else {
-                    log.warn("Unhandled state event: " + status.toString());
+//                    log.warn("Unhandled state event: " + status.toString());
                 }
             }
 
@@ -183,7 +197,6 @@ public class Tron {
                     glRectf(0, 0, 640, 480);
                     break;
             }
-            glfwSwapBuffers(windowHandle); // swap the color buffers
 
             // Poll for windowHandle events. The key callback above will only be
             // invoked during this call.

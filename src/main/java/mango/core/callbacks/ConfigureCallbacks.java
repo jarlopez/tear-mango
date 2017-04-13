@@ -1,6 +1,14 @@
 package mango.core.callbacks;
 
+import mango.core.drupe.DrupeSystem;
+
 public class ConfigureCallbacks implements CallbackBase {
+    private final DrupeSystem drupe;
+
+    public ConfigureCallbacks(DrupeSystem drupe) {
+        this.drupe = drupe;
+    }
+
     @Override
     public String getName() {
         return null;

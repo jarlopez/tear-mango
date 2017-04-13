@@ -1,6 +1,14 @@
 package mango.core.callbacks;
 
+import mango.core.drupe.DrupeSystem;
+
 public class PauseCallbacks implements CallbackBase {
+    private final DrupeSystem drupe;
+
+    public PauseCallbacks(DrupeSystem drupe) {
+        this.drupe = drupe;
+    }
+
     @Override
     public String getName() {
         return null;
