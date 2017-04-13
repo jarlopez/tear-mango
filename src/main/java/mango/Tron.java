@@ -1,6 +1,9 @@
 package mango;
 
 import mango.game.State;
+import mango.game.StateEvent;
+import mango.game.StateFunction;
+import mango.input.KeyHandler;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -11,6 +14,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
 import java.nio.IntBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
@@ -19,13 +24,37 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Tron {
-    private final Logger log = LoggerFactory.getLogger(Tron.class);
-
+    private static boolean initialized = false;
     private static State state = State.GAME;
+    private static Map<StateEvent, StateFunction> fsm = new HashMap<>();
 
+    static {
+        fsm.put(StateEvent.GameEnd, () -> "pause");
+        fsm.put(StateEvent.GamePause, () -> "pause");
+        fsm.put(StateEvent.GameUnpause, () -> "game");
+        fsm.put(StateEvent.Credits, () -> "credits");
+        fsm.put(StateEvent.GameEscape, () -> "gui");
+        fsm.put(StateEvent.GUIPromptEscape, () -> "gui");
+        fsm.put(StateEvent.PauseEscape, () -> "gui");
+        fsm.put(StateEvent.GUIPrompt, () -> "configure");
+        fsm.put(StateEvent.Quit, () -> "quit");
+        fsm.put(StateEvent.GUIEscape, () -> {
+            if (initialized)
+                return "pause";
+            else
+                return "gui";
+        });
+        fsm.put(StateEvent.GameLaunch, () -> {
+            initialized = true;
+            return "pause";
+        });
+    }
+
+    private final Logger log = LoggerFactory.getLogger(Tron.class);
     private final String WINDOW_TITLE = "Tear Mango - A Tron Game";
     private final int WIDTH = 800;
     private final int HEIGHT = 600;
+    private String current = "gui";
     private PrintStream errStream = System.err;
     private long windowHandle;
 
@@ -65,17 +94,16 @@ public class Tron {
 
         // Create the windowHandle
         windowHandle = glfwCreateWindow(WIDTH, HEIGHT, WINDOW_TITLE, NULL, NULL);
+
         if (windowHandle == NULL) {
             throw new RuntimeException("Failed to create the GLFW windowHandle");
         }
 
         // Setup a key callback. It will be called every time a key is pressed, repeated or released.
-        glfwSetKeyCallback(windowHandle, (window, key, scancode, action, mods) -> {
-            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
-                glfwSetWindowShouldClose(window, true); // We will detect this in the rendering loop
-        });
+        glfwSetKeyCallback(windowHandle, new KeyHandler());
 
         // Get the thread stack and push a new frame
+        // TODO Why is this needed?
         try (MemoryStack stack = stackPush()) {
             IntBuffer pWidth = stack.mallocInt(1); // int*
             IntBuffer pHeight = stack.mallocInt(1); // int*
@@ -84,13 +112,13 @@ public class Tron {
             glfwGetWindowSize(windowHandle, pWidth, pHeight);
 
             // Get the resolution of the primary monitor
-            GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+            GLFWVidMode vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
             // Center the windowHandle
             glfwSetWindowPos(
                     windowHandle,
-                    (vidmode.width() - pWidth.get(0)) / 2,
-                    (vidmode.height() - pHeight.get(0)) / 2
+                    (vidMode.width() - pWidth.get(0)) / 2,
+                    (vidMode.height() - pHeight.get(0)) / 2
             );
         } // the stack frame is popped automatically
 
@@ -117,8 +145,19 @@ public class Tron {
         // Run the rendering loop until the user has attempted to close
         // the windowHandle or has pressed the ESCAPE key.
         while (!glfwWindowShouldClose(windowHandle)) {
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
+            StateEvent status = mainLoop(current);
+            if (fsm.containsKey(status) && status != StateEvent.Quit) {
+                current = fsm.get(status).next();
+            } else {
+                if (status == StateEvent.Quit) {
+                    log.info("Clean exit.");
+                } else {
+                    log.warn("Unhandled state event: " + status.toString());
+                }
+            }
+
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
             switch (state) {
                 case INTRO:
                     glColor3f(1.0f, 0.0f, 0.0f);
@@ -133,14 +172,17 @@ public class Tron {
                     glRectf(0, 0, 640, 480);
                     break;
             }
-
             glfwSwapBuffers(windowHandle); // swap the color buffers
-
 
             // Poll for windowHandle events. The key callback above will only be
             // invoked during this call.
             glfwPollEvents();
         }
+    }
+
+    private StateEvent mainLoop(String current) {
+        // TODO
+        return StateEvent.NotImplemented;
     }
 
 }
