@@ -8,16 +8,13 @@ import org.slf4j.LoggerFactory;
 import static org.lwjgl.glfw.GLFW.*;
 
 public class DrupeSystem {
+    public static final int DRUPE_KEY_NONE = 0;
+    public static final int DRUPE_KEY_PRESS = 1;
+    public static final int DRUPE_KEY_RELEASE = 2;
     private static final Logger log = LoggerFactory.getLogger(DrupeSystem.class.getName());
-
+    private static final int DRUPE_NUM_SCANCODES = 10000; // TODO
     private StateEvent returnCode = StateEvent.None; // TODO
     private CallbackBase currentCallbacks;
-
-    public static final int DRUPE_KEY_NONE      = 0;
-    public static final int DRUPE_KEY_PRESS     = 1;
-    public static final int DRUPE_KEY_RELEASE   = 2;
-
-    private static final int DRUPE_NUM_SCANCODES = 10000; // TODO
     private int[] keymap = new int[DRUPE_NUM_SCANCODES];
 
     private long windowHandle;
