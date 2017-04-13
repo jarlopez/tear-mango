@@ -1,7 +1,11 @@
 package mango.game;
 
 public enum StateEvent {
+    // Meta
+    None,
     NotImplemented,
+
+    // Real events
 	Quit,
 	GameEnd,
 	GamePause,

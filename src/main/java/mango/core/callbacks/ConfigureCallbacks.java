@@ -1,4 +1,4 @@
-package mango.core;
+package mango.core.callbacks;
 
 public class ConfigureCallbacks implements CallbackBase {
     @Override

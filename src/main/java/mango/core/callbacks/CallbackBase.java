@@ -1,4 +1,4 @@
-package mango.core;
+package mango.core.callbacks;
 
 public interface CallbackBase {
     String getName();

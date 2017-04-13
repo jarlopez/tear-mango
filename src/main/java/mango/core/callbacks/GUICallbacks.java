@@ -1,6 +1,6 @@
-package mango.core;
+package mango.core.callbacks;
 
-public class PauseCallbacks implements CallbackBase {
+public class GUICallbacks implements CallbackBase {
     @Override
     public String getName() {
         return null;

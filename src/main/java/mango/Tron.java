@@ -1,5 +1,6 @@
 package mango;
 
+import mango.core.drupe.DrupeSystem;
 import mango.game.State;
 import mango.game.StateEvent;
 import mango.game.StateFunction;
@@ -24,6 +25,10 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Tron {
+
+
+    private DrupeSystem drupe;
+
     private static boolean initialized = false;
     private static State state = State.GAME;
     private static Map<StateEvent, StateFunction> fsm = new HashMap<>();
@@ -78,6 +83,8 @@ public class Tron {
     }
 
     private void init() {
+        log.info("Initializing game");
+
         // Setup an error callback. The default implementation
         // will print the error message in System.err.
         GLFWErrorCallback.createPrint(errStream).set();
@@ -88,6 +95,8 @@ public class Tron {
         }
 
         // Configure GLFW
+        log.debug("Configuring GLFW");
+
         glfwDefaultWindowHints(); // optional, the current windowHandle hints are already the default
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the windowHandle will stay hidden after creation
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // the windowHandle will be resizable
@@ -129,6 +138,8 @@ public class Tron {
 
         // Make the windowHandle visible
         glfwShowWindow(windowHandle);
+
+        drupe = new DrupeSystem();
     }
 
     private void loop() {
@@ -146,7 +157,7 @@ public class Tron {
         // the windowHandle or has pressed the ESCAPE key.
         while (!glfwWindowShouldClose(windowHandle)) {
 
-            StateEvent status = mainLoop(current);
+            StateEvent status = drupe.mainLoop(current);
             if (fsm.containsKey(status) && status != StateEvent.Quit) {
                 current = fsm.get(status).next();
             } else {
@@ -180,9 +191,5 @@ public class Tron {
         }
     }
 
-    private StateEvent mainLoop(String current) {
-        // TODO
-        return StateEvent.NotImplemented;
-    }
 
 }
